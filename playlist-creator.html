@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RUMBLE — Spotify Playlist Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0a0a0a;--surface:#141414;--surface2:#1c1c1c;--border:#2a2a2a;--green:#1DB954;--green-dim:rgba(29,185,84,0.12);--red:#E74C3C;--yellow:#F1C40F;--blue:#3498DB;--text:#f0f0f0;--muted:#888;--radius:8px; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:24px 40px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);z-index:100;}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--green);}
+  .logo span{color:var(--text);}
+  #userInfo{display:none;align-items:center;gap:10px;font-size:14px;color:var(--muted);}
+  #userInfo img{width:32px;height:32px;border-radius:50%;border:2px solid var(--green);}
+  #userInfo strong{color:var(--text);}
+  main{max-width:960px;margin:0 auto;padding:48px 24px;}
+  .hero{margin-bottom:48px;}
+  .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,80px);letter-spacing:4px;line-height:1;}
+  .hero h1 span{color:var(--green);}
+  .hero p{color:var(--muted);margin-top:12px;font-size:15px;max-width:520px;line-height:1.6;}
+  .steps{display:flex;gap:0;margin-bottom:40px;}
+  .step{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);}
+  .step.active{color:var(--text);}.step.done{color:var(--green);}
+  .step-num{width:26px;height:26px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;}
+  .step.done .step-num{background:var(--green);border-color:var(--green);color:#000;}
+  .step-line{width:32px;height:1px;background:var(--border);margin:0 4px;}
+  #authPanel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:36px;margin-bottom:40px;}
+  #authPanel h2{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:8px;}
+  #authPanel p{color:var(--muted);font-size:14px;margin-bottom:20px;line-height:1.6;}
+  .btn-primary{background:var(--green);color:#000;border:none;border-radius:50px;padding:11px 26px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;cursor:pointer;transition:all 0.2s;}
+  .btn-primary:hover{background:#1ed760;transform:scale(1.02);}
+  .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+  #playlistsPanel{display:none;}
+  #playlistsPanel h2{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:6px;}
+  #playlistsPanel>p{color:var(--muted);font-size:14px;margin-bottom:28px;}
+  .create-all-bar{display:flex;align-items:center;justify-content:space-between;background:var(--green-dim);border:1px solid rgba(29,185,84,0.25);border-radius:10px;padding:16px 20px;margin-bottom:28px;}
+  .create-all-bar p{font-size:14px;color:var(--text);}
+  .create-all-bar p span{color:var(--green);font-weight:500;}
+  .playlists-grid{display:flex;flex-direction:column;gap:16px;}
+  .pl-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color 0.2s;}
+  .pl-card.created{border-color:var(--green);}
+  .pl-header{display:flex;align-items:center;gap:16px;padding:18px 20px;cursor:pointer;user-select:none;}
+  .pl-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+  .pl-info{flex:1;}
+  .pl-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;}
+  .pl-meta{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;}
+  .pl-badge{font-size:11px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:50px;border:1px solid var(--border);color:var(--muted);flex-shrink:0;}
+  .pl-badge.done{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+  .pl-badge.loading{border-color:var(--yellow);color:var(--yellow);}
+  .pl-toggle{color:var(--muted);font-size:18px;flex-shrink:0;transition:transform 0.2s;}
+  .pl-card.open .pl-toggle{transform:rotate(180deg);}
+  .pl-body{display:none;padding:0 20px 18px;border-top:1px solid var(--border);}
+  .pl-card.open .pl-body{display:block;}
+  .tracks-table{width:100%;border-collapse:collapse;margin:16px 0;}
+  .tracks-table th{font-size:10px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);}
+  .tracks-table td{padding:9px 8px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .tracks-table tr:last-child td{border-bottom:none;}
+  .t-num{color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;width:28px;}
+  .t-title{font-weight:500;}.t-artist{color:var(--muted);font-size:12px;}
+  .t-bpm{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:right;width:50px;}
+  .pl-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .pl-status{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
+  .pl-status.ok{color:var(--green);}.pl-status.err{color:var(--red);}
+  #log{margin-top:40px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:none;}
+  #log h3{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px;}
+  #logOutput{font-family:'DM Mono',monospace;font-size:12px;line-height:1.8;color:var(--muted);max-height:200px;overflow-y:auto;}
+  .log-ok{color:var(--green);}.log-err{color:var(--red);}.log-info{color:var(--blue);}
+  .empty-note{color:var(--muted);font-size:13px;font-style:italic;padding:12px 0;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">RUMBLE<span> x SPOTIFY</span></div>
+  <div id="userInfo"><img id="userAvatar" src="" alt=""><span>Signed in as <strong id="userName"></strong></span></div>
+</header>
+<main>
+  <div class="hero">
+    <h1>CREATE YOUR<br><span>RUMBLE</span> PLAYLISTS</h1>
+    <p>Authorize with Spotify to auto-create 5 BPM-matched playlists for each phase of your workout.</p>
+  </div>
+  <div class="steps">
+    <div class="step active" id="step1"><div class="step-num">1</div> Connect Spotify</div>
+    <div class="step-line"></div>
+    <div class="step" id="step2"><div class="step-num">2</div> Review Tracks</div>
+    <div class="step-line"></div>
+    <div class="step" id="step3"><div class="step-num">3</div> Create Playlists</div>
+  </div>
+  <div id="authPanel">
+    <h2>Connect Spotify</h2>
+    <p>Click below to authorize. You will be redirected to Spotify and back here automatically.</p>
+    <button class="btn-primary" onclick="authorize()" style="font-size:16px;padding:14px 32px;">Authorize with Spotify</button>
+    <p style="margin-top:24px;font-size:12px;color:var(--muted)">Or paste a token directly: <input id="directToken" type="text" placeholder="Paste OAuth token..." style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 10px;font-family:'DM Mono',monospace;font-size:12px;width:280px;outline:none;margin-left:8px"><button onclick="setDirectToken()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;margin-left:6px">Use Token</button></p>
+  </div>
+  <div id="playlistsPanel">
+    <h2>Your RUMBLE Playlists</h2>
+    <p>Ready to create on your Spotify account.</p>
+    <div class="create-all-bar"><p>Create all <span>5 playlists</span> at once</p><button class="btn-primary" id="createAllBtn" onclick="createAllPlaylists()">Create All Playlists</button></div>
+    <div class="playlists-grid" id="playlistsGrid"></div>
+  </div>
+  <div id="log"><h3>Activity Log</h3><div id="logOutput"></div></div>
+</main>
+<script>
+const CLIENT_ID='0881a7effda04d1a9b6cb68d78e97bd3';
+const REDIRECT_URI='https://vikashjasani.github.io/rumble-workout/playlist-creator.html';
+const PLAYLISTS=[
+  {id:'cooldown',name:'RUMBLE - Cool Down',bpmRange:'70-85 BPM',vibe:'Mellow, melodic',color:'#2ECC71',description:'Cool down after your RUMBLE workout.',tracks:[{title:"Summer Breeze",artist:"The Isley Brothers",bpm:78},{title:"Who's Loving You",artist:"The Jackson 5",bpm:80},{title:"The Tracks of My Tears",artist:"Smokey Robinson",bpm:85}]},
+  {id:'warmup',name:'RUMBLE - Warm Up',bpmRange:'90-105 BPM',vibe:'Smooth, building energy',color:'#F1C40F',description:'Warm up and build energy.',tracks:[{title:"Used to Love U",artist:"John Legend",bpm:88},{title:"Passing Me By",artist:"The Pharcyde",bpm:89},{title:"They Reminisce Over You",artist:"Pete Rock CL Smooth",bpm:90},{title:"Luck of Lucien",artist:"A Tribe Called Quest",bpm:90},{title:"Bonita Applebum",artist:"A Tribe Called Quest",bpm:92},{title:"Award Tour",artist:"A Tribe Called Quest",bpm:92},{title:"Red Light Green Light",artist:"Charizma Peanut Butter Wolf",bpm:93},{title:"Won't Trade",artist:"Q-Tip",bpm:94},{title:"Selfish",artist:"Slum Village",bpm:95},{title:"Ya Mama",artist:"The Pharcyde",bpm:95},{title:"Remember the Time",artist:"Michael Jackson",bpm:96},{title:"Buggin Out",artist:"A Tribe Called Quest",bpm:97},{title:"Johnny Is Dead",artist:"Q-Tip",bpm:97},{title:"What's Golden",artist:"Jurassic 5",bpm:98},{title:"The Seed 2.0",artist:"The Roots",bpm:98},{title:"Runnin",artist:"The Pharcyde",bpm:100},{title:"Hard to Handle",artist:"Otis Redding",bpm:100},{title:"Who Got Da Props",artist:"Black Moon",bpm:100},{title:"I Got Cha Opin",artist:"Black Moon",bpm:101},{title:"Red Hot",artist:"Jurassic 5",bpm:103}]},
+  {id:'bench',name:'RUMBLE - Bench',bpmRange:'110-120 BPM',vibe:'Rhythmic, steady groove',color:'#3498DB',description:'Bench work steady groove.',tracks:[{title:"Intergalactic",artist:"Beastie Boys",bpm:108},{title:"She Wants to Move",artist:"NERD",bpm:110}]},
+  {id:'bagwork',name:'RUMBLE - Bag Work',bpmRange:'130-145 BPM',vibe:'Hard, aggressive, driving',color:'#E74C3C',description:'Hard aggressive driving.',tracks:[{title:"Sabotage",artist:"Beastie Boys",bpm:136}]},
+  {id:'finisher',name:'RUMBLE - Finisher',bpmRange:'145-160 BPM',vibe:'All out, chaotic energy',color:'#E67E22',description:'All out chaotic energy.',tracks:[]}
+];
+let accessToken=null,userId=null;
+function b64u(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/+/g,'-').replace(///g,'_').replace(/=+$/,'');}
+async function authorize(){
+  const arr=new Uint8Array(64);crypto.getRandomValues(arr);
+  const v=b64u(arr);
+  const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));
+  const c=b64u(d);
+  localStorage.setItem('rv',v);
+  const p=new URLSearchParams({response_type:'code',client_id:CLIENT_ID,scope:'playlist-modify-public playlist-modify-private',redirect_uri:REDIRECT_URI,code_challenge_method:'S256',code_challenge:c});
+  window.location.href='https://accounts.spotify.com/authorize?'+p;
+}
+function setDirectToken(){const t=document.getElementById('directToken').value.trim().replace('Bearer ','');if(!t)return;accessToken=t;verifyToken();}
+function sf(url,o={}){return fetch(url,{...o,headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json',...(o.headers||{})}});}
+async function verifyToken(){
+  addLog('Verifying...','info');
+  try{const r=await sf('https://api.spotify.com/v1/me');const u=await r.json();if(u.error)throw new Error(u.error.message);userId=u.id;
+  document.getElementById('userName').textContent=u.display_name||u.id;
+  if(u.images?.[0])document.getElementById('userAvatar').src=u.images[0].url;
+  document.getElementById('userInfo').style.display='flex';
+  document.getElementById('authPanel').style.display='none';
+  markStep(1);markStep(2);showPlaylists();addLog('Connected as '+(u.display_name||u.id),'ok');
+  }catch(e){addLog('Auth failed: '+e.message,'err');alert('Token error: '+e.message);}
+}
+async function searchTrack(title,artist){const q=encodeURIComponent('track:'+title+' artist:'+artist);const r=await sf('https://api.spotify.com/v1/search?q='+q+'&type=track&limit=1');const d=await r.json();return d.tracks?.items?.[0]?.uri||null;}
+async function createPl(pl){
+  const r=await sf('https://api.spotify.com/v1/users/'+userId+'/playlists',{method:'POST',body:JSON.stringify({name:pl.name,description:pl.description+' | '+pl.bpmRange,public:false})});
+  const p=await r.json();if(!p.id)throw new Error(p.error?.message||'Failed');
+  addLog('Created: '+pl.name,'ok');
+  const uris=[];
+  for(const t of pl.tracks){const u=await searchTrack(t.title,t.artist);if(u){uris.push(u);addLog(' + '+t.title,'ok');}else{addLog(' - '+t.title+' not found','err');}}
+  if(uris.length)await sf('https://api.spotify.com/v1/playlists/'+p.id+'/tracks',{method:'POST',body:JSON.stringify({uris})});
+  addLog('Added '+uris.length+'/'+pl.tracks.length,'ok');
+  return{id:p.id,added:uris.length,url:p.external_urls?.spotify};
+}
+function showPlaylists(){
+  document.getElementById('playlistsPanel').style.display='block';
+  const g=document.getElementById('playlistsGrid');g.innerHTML='';
+  PLAYLISTS.forEach(pl=>{
+    const c=document.createElement('div');c.className='pl-card';c.id='card-'+pl.id;
+    const rows=pl.tracks.length?pl.tracks.map((t,j)=>'<tr><td class="t-num">'+(j+1)+'</td><td><div class="t-title">'+t.title+'</div><div class="t-artist">'+t.artist+'</div></td><td class="t-bpm">'+t.bpm+'</td></tr>').join(''):'<tr><td colspan="3"><div class="empty-note">No tracks in this BPM range.</div></td></tr>';
+    c.innerHTML='<div class="pl-header" onclick="toggleCard(''+pl.id+'')"><div class="pl-dot" style="background:'+pl.color+'"></div><div class="pl-info"><div class="pl-name">'+pl.name+'</div><div class="pl-meta">'+pl.bpmRange+' - '+pl.tracks.length+' tracks</div></div><span class="pl-badge" id="b-'+pl.id+'">'+pl.tracks.length+' tracks</span><span class="pl-toggle">v</span></div><div class="pl-body"><table class="tracks-table"><thead><tr><th>#</th><th>Track</th><th style="text-align:right">BPM</th></tr></thead><tbody>'+rows+'</tbody></table><div class="pl-actions"><button class="btn-primary" id="cb-'+pl.id+'" onclick="createSingle(''+pl.id+'')" '+(pl.tracks.length?'':'disabled')+'>Create Playlist</button><span class="pl-status" id="st-'+pl.id+'"></span></div></div>';
+    g.appendChild(c);
+  });
+  document.getElementById('playlistsPanel').scrollIntoView({behavior:'smooth'});
+}
+function toggleCard(id){document.getElementById('card-'+id).classList.toggle('open');}
+async function createSingle(plId){
+  const pl=PLAYLISTS.find(p=>p.id===plId);
+  const btn=document.getElementById('cb-'+plId),st=document.getElementById('st-'+plId),badge=document.getElementById('b-'+plId),card=document.getElementById('card-'+plId);
+  btn.disabled=true;btn.textContent='Creating...';badge.className='pl-badge loading';badge.textContent='...';
+  showLog();addLog('Creating '+pl.name+'...','info');
+  try{
+    const r=await createPl(pl);
+    st.textContent='Created! '+r.added+' tracks';st.className='pl-status ok';
+    badge.className='pl-badge done';badge.textContent='done';card.classList.add('created');
+    btn.textContent='Open on Spotify';btn.disabled=false;
+    btn.onclick=()=>window.open(r.url||'https://open.spotify.com/playlist/'+r.id,'_blank');
+    markStep(3);
+  }catch(e){st.textContent='Failed: '+e.message;st.className='pl-status err';badge.className='pl-badge';badge.textContent='failed';btn.disabled=false;btn.textContent='Retry';addLog('Error: '+e.message,'err');}
+}
+async function createAllPlaylists(){
+  const btn=document.getElementById('createAllBtn');btn.disabled=true;btn.textContent='Creating...';showLog();
+  for(const pl of PLAYLISTS.filter(p=>p.tracks.length)){await createSingle(pl.id);await new Promise(r=>setTimeout(r,400));}
+  btn.textContent='All Done!';markStep(3);
+}
+function markStep(n){const el=document.getElementById('step'+n);el.className='step done';el.querySelector('.step-num').textContent='v';}
+function showLog(){document.getElementById('log').style.display='block';}
+function addLog(msg,type){const o=document.getElementById('logOutput'),l=document.createElement('div');l.className='log-'+type;l.textContent='['+new Date().toLocaleTimeString()+'] '+msg;o.appendChild(l);o.scrollTop=o.scrollHeight;}
+window.addEventListener('load',async()=>{
+  const p=new URLSearchParams(window.location.search);
+  const code=p.get('code'),err=p.get('error');
+  if(err){addLog('Spotify error: '+err,'err');showLog();return;}
+  if(code){
+    const v=localStorage.getItem('rv');
+    window.history.replaceState({},'',window.location.pathname);
+    showLog();addLog('Exchanging code...','info');
+    try{
+      const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIRECT_URI,client_id:CLIENT_ID,code_verifier:v})});
+      const d=await r.json();
+      if(d.error)throw new Error(d.error_description||d.error);
+      accessToken=d.access_token;localStorage.removeItem('rv');
+      addLog('Token received!','ok');verifyToken();
+    }catch(e){addLog('Token exchange failed: '+e.message,'err');}
+  }
+});
+</script>
+</body>
+</html>
