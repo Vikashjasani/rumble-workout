@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a; --surface: #111111; --surface2: #161616;
+    --border: #1f1f1f; --border2: #2a2a2a; --text: #e8e8e8;
+    --muted: #666; --dim: #333; --green: #4ade80; --green-dim: #0d2016;
+    --yellow: #facc15; --blue: #60a5fa; --orange: #f97316; --red: #f87171;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+  .nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .nav-brand { font-size: 13px; font-weight: 700; letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; text-decoration: none; }
+  .nav-link { font-size: 12px; font-weight: 500; color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 20px; transition: all 0.2s; }
+  .nav-link:hover { color: var(--text); background: var(--surface2); }
+  .nav-link.active { color: var(--green); background: var(--green-dim); }
+
+  .tabs { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 16px; }
+  .tab-btn { background: none; border: none; color: var(--muted); font-family: inherit; font-size: 13px; font-weight: 500; padding: 14px 18px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--green); }
+
+  .page { display: none; padding: 20px 16px; max-width: 680px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
+  .card-title { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; font-family: inherit; font-size: 13px; font-weight: 600; padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+  .btn-primary { background: var(--green); color: #000; }
+  .btn-primary:hover { background: #6ee7a0; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+  .btn-ghost { background: none; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-sm { font-size: 11px; padding: 7px 12px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 14px; padding: 10px 12px; outline: none; transition: border-color 0.2s; }
+  .form-input:focus { border-color: var(--green); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+  .pill-green { background: var(--green-dim); color: var(--green); }
+  .pill-yellow { background: #1c1800; color: var(--yellow); }
+  .pill-blue { background: #0d1a2e; color: var(--blue); }
+  .pill-orange { background: #1c0f00; color: var(--orange); }
+  .pill-red { background: #1c0808; color: var(--red); }
+  .pill-gray { background: var(--surface2); color: var(--muted); }
+
+  /* PLAN TAB */
+  .plan-phase { border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; border: 1px solid var(--border); }
+  .plan-phase-header { padding: 16px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+  .plan-phase-body { display: none; border-top: 1px solid var(--border); }
+  .plan-phase-body.open { display: block; }
+  .plan-week { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .plan-week:last-child { border-bottom: none; }
+  .plan-week-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; }
+  .run-card { border-radius: var(--radius-sm); padding: 13px 14px; margin-bottom: 8px; border: 1px solid; cursor: pointer; transition: filter 0.15s, transform 0.15s; }
+  .run-card:hover { filter: brightness(1.3); transform: translateY(-1px); }
+  .run-card:active { transform: scale(0.98); }
+  .run-card:last-child { margin-bottom: 0; }
+  .run-card-type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .run-card-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+  .run-card-title::after { content: '→'; font-size: 14px; opacity: 0.4; flex-shrink: 0; }
+  .run-card-detail { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .run-easy { background: #0a1a10; border-color: #1a3320; }
+  .run-easy .run-card-type { color: var(--green); }
+  .run-tempo { background: #1a1400; border-color: #2e2500; }
+  .run-tempo .run-card-type { color: var(--yellow); }
+  .run-intervals { background: #120d1e; border-color: #241852; }
+  .run-intervals .run-card-type { color: #a78bfa; }
+  .run-long { background: #0a1520; border-color: #1a2e45; }
+  .run-long .run-card-type { color: var(--blue); }
+  .run-race { background: #1e0a0a; border-color: #3d1515; }
+  .run-race .run-card-type { color: var(--red); }
+  .plan-phase-outcome { margin: 0 16px 16px; padding: 14px; background: var(--green-dim); border: 1px solid #1a3320; border-radius: var(--radius-sm); }
+  .chevron { font-size: 12px; color: var(--muted); transition: transform 0.2s; display: inline-block; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* FILTER PILLS */
+  .filter-pill { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-family: inherit; font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 20px; cursor: pointer; transition: all 0.15s; }
+  .filter-pill:hover { color: var(--text); border-color: var(--border2); }
+  .filter-pill.active { background: var(--green-dim); border-color: var(--green); color: var(--green); font-weight: 600; }
+
+  /* RUN ITEMS */
+  .run-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: all 0.18s; display: flex; justify-content: space-between; align-items: center; }
+  .run-item:hover { border-color: var(--border2); }
+  .run-stat { font-size: 12px; color: var(--muted); }
+  .run-stat strong { color: var(--text); font-weight: 600; }
+
+  /* DETAIL */
+  .detail-header { background: linear-gradient(135deg, var(--surface) 0%, var(--green-dim) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
+  .detail-back { font-size: 12px; color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 6px; margin-bottom: 14px; background: none; border: none; font-family: inherit; transition: color 0.2s; }
+  .detail-back:hover { color: var(--text); }
+  .detail-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stat-box { background: rgba(0,0,0,0.3); border-radius: var(--radius-sm); padding: 11px; text-align: center; }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
+  .stat-value { font-size: 17px; font-weight: 700; color: var(--green); }
+
+  /* SPLITS */
+  .splits-table { width: 100%; border-collapse: collapse; }
+  .splits-table th { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 10px; text-align: left; }
+  .splits-table td { padding: 6px 0; border-top: 1px solid var(--border); vertical-align: middle; }
+  .split-km { font-size: 12px; color: var(--muted); font-weight: 600; width: 26px; }
+  .split-bar-cell { padding: 6px 8px !important; }
+  .split-bar-wrap { height: 22px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .split-bar { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; min-width: 40px; }
+  .split-bar span { font-size: 11px; font-weight: 600; color: #000; }
+  .split-hr { font-size: 11px; color: var(--muted); width: 46px; text-align: right; }
+
+  /* HR ZONES */
+  .hr-zone-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .hr-zone-label { font-size: 11px; width: 76px; flex-shrink: 0; }
+  .hr-zone-bar-wrap { flex: 1; height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .hr-zone-bar { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+  .hr-zone-val { font-size: 11px; color: var(--muted); width: 32px; text-align: right; }
+
+  /* UPLOAD */
+  .upload-zone { border: 2px dashed var(--border2); border-radius: var(--radius); padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface2); }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--green); background: var(--green-dim); }
+  #file-input { display: none; }
+
+  /* AI */
+  .ai-box { background: var(--green-dim); border: 1px solid #1a3320; border-radius: var(--radius-sm); padding: 14px; }
+  .ai-label { font-size: 10px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
+  .ai-text { font-size: 13px; color: #aaa; line-height: 1.6; }
+
+  /* MODAL */
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px 16px 0 0; padding: 24px 20px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; }
+
+  /* MISC */
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--border2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .phase-segs { display: flex; gap: 5px; margin-bottom: 10px; }
+  .phase-seg { flex: 1; height: 3px; border-radius: 2px; background: var(--border2); }
+  .phase-seg.on { background: var(--green); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Forge</a>
+  <div style="display:flex;gap:4px">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="rumble.html" class="nav-link">Boxing</a>
+    <a href="running.html" class="nav-link active">Running</a>
+  </div>
+</nav>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('dashboard',this)">Dashboard</button>
+  <button class="tab-btn" onclick="switchTab('plan',this)">Plan</button>
+  <button class="tab-btn" onclick="switchTab('log',this)">Log Run</button>
+  <button class="tab-btn" onclick="switchTab('history',this)">History</button>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="tab-dashboard" class="page active">
+
+  <div class="card">
+    <div class="card-title">Training Phase</div>
+    <div class="phase-segs"><div class="phase-seg on"></div><div class="phase-seg"></div><div class="phase-seg"></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:17px;font-weight:700;margin-bottom:2px">Phase 1 · Build Your Engine</div>
+        <div style="font-size:12px;color:var(--muted)">Weeks 1–4 · Easy runs, tempo, long run</div>
+      </div>
+      <span class="pill pill-green">Active</span>
+    </div>
+  </div>
+
+  <div id="next-run-card"></div>
+
+  <div class="card">
+    <div class="card-title">This Week</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--green)" id="wk-runs">0</div>
+        <div style="font-size:11px;color:var(--muted)">Runs</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--blue)" id="wk-km">0.0</div>
+        <div style="font-size:11px;color:var(--muted)">km</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:18px;font-weight:700;color:var(--yellow)" id="wk-pace">—</div>
+        <div style="font-size:11px;color:var(--muted)">avg pace</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Pace to Goal</div>
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:12px;color:var(--muted)">5k in 25 min · 5'00"/km</span>
+        <span style="font-size:12px;font-weight:600" id="gap-5k">—</span>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;height:5px;overflow:hidden">
+        <div id="bar-5k" style="height:100%;background:var(--green);border-radius:4px;width:0%;transition:width 1s ease"></div>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:12px;color:var(--muted)">10k in 60 min · 5'59"/km</span>
+        <span style="font-size:12px;font-weight:600" id="gap-10k">—</span>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;height:5px;overflow:hidden">
+        <div id="bar-10k" style="height:100%;background:var(--blue);border-radius:4px;width:0%;transition:width 1s ease"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PLAN ══ -->
+<div id="tab-plan" class="page">
+
+  <div style="margin-bottom:16px">
+    <div style="font-size:20px;font-weight:700;margin-bottom:4px">12-Week Training Plan</div>
+    <div style="font-size:13px;color:var(--muted)">5k → 10k · Epsom · 12 weeks</div>
+  </div>
+
+  <div class="ai-box" style="margin-bottom:16px">
+    <div class="ai-label">⚡ How this works</div>
+    <div class="ai-text">Each week has 3 runs. Do all 3 before moving to the next week — on whichever days work for you. Space them out with at least one rest day between hard sessions (intervals, tempo, long run). Your 10k goal pace is already within reach; this plan builds the distance and the speed to get there.</div>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="plan-phase">
+    <div class="plan-phase-header" style="background:#0d2016" onclick="togglePhase(1)">
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:3px">Phase 1 · Weeks 1–4</div>
+        <div style="font-size:17px;font-weight:700">Build Your Engine</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Easy · Tempo · Long run</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="pill pill-green">Active</span>
+        <span class="chevron open" id="chev-1">▼</span>
+      </div>
+    </div>
+    <div class="plan-phase-body open" id="phase-body-1">
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 1</div>
+        <div class="run-card run-easy" onclick="logFromPlan('W1 Easy Run', 4, 'easy','p1')">
+          <div class="run-card-type">🏃 Easy Run</div>
+          <div class="run-card-title">4km easy</div>
+          <div class="run-card-detail">6'30"–7'00"/km · conversational pace · if you can't hold a sentence, slow down</div>
+        </div>
+        <div class="run-card run-tempo" onclick="logFromPlan('W1 Tempo Run', 5, 'tempo','p2')">
+          <div class="run-card-type">⚡ Tempo Run</div>
+          <div class="run-card-title">5km total</div>
+          <div class="run-card-detail">1km warm-up · 3km at 5'30"–5'45"/km · 1km cooldown · 7/10 effort</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W1 Long Run', 6, 'long','p3')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">6km easy</div>
+          <div class="run-card-detail">6'15"–6'30"/km · slow and steady · do this one last in the week</div>
+        </div>
+      </div>
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 2</div>
+        <div class="run-card run-easy" onclick="logFromPlan('W2 Easy Run', 4.5, 'easy','p4')">
+          <div class="run-card-type">🏃 Easy Run</div>
+          <div class="run-card-title">4.5km easy</div>
+          <div class="run-card-detail">6'30"–7'00"/km · same effort as week 1, slightly longer</div>
+        </div>
+        <div class="run-card run-tempo" onclick="logFromPlan('W2 Tempo Run', 5, 'tempo','p5')">
+          <div class="run-card-type">⚡ Tempo Run</div>
+          <div class="run-card-title">5km total</div>
+          <div class="run-card-detail">1km warm-up · 3km at 5'28"–5'43"/km · 1km cooldown · tighten pace slightly</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W2 Long Run', 6.5, 'long','p6')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">6.5km easy</div>
+          <div class="run-card-detail">6'15"–6'30"/km · +0.5km from last week</div>
+        </div>
+      </div>
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 3</div>
+        <div class="run-card run-easy" onclick="logFromPlan('W3 Easy Run', 5, 'easy','p7')">
+          <div class="run-card-type">🏃 Easy Run</div>
+          <div class="run-card-title">5km easy</div>
+          <div class="run-card-detail">6'30"–7'00"/km · effort should still feel easy even at 5km</div>
+        </div>
+        <div class="run-card run-tempo" onclick="logFromPlan('W3 Tempo Run', 5.5, 'tempo','p8')">
+          <div class="run-card-type">⚡ Tempo Run</div>
+          <div class="run-card-title">5.5km total</div>
+          <div class="run-card-detail">1km warm-up · 3.5km at 5'30"–5'45"/km · 1km cooldown</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W3 Long Run', 7, 'long','p9')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">7km easy</div>
+          <div class="run-card-detail">6'15"–6'30"/km · new route recommended to stay fresh</div>
+        </div>
+      </div>
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 4 · Benchmark week</div>
+        <div class="run-card run-easy" onclick="logFromPlan('W4 Easy Run', 4, 'easy','p10')">
+          <div class="run-card-type">🏃 Easy Run</div>
+          <div class="run-card-title">4km easy</div>
+          <div class="run-card-detail">6'30"–7'00"/km · keep it short and fresh — time trial is coming</div>
+        </div>
+        <div class="run-card run-race" onclick="logFromPlan('W4 5k Time Trial', 5, 'race','p11')">
+          <div class="run-card-type">🎯 5k Time Trial</div>
+          <div class="run-card-title">5km max effort</div>
+          <div class="run-card-detail">Flat route · all out · this is your Phase 1 benchmark — record your time and log it</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W4 Long Run', 7.5, 'long','p12')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">7.5km easy</div>
+          <div class="run-card-detail">6'15"–6'30"/km · do this after the time trial, not before</div>
+        </div>
+      </div>
+
+      <div class="plan-phase-outcome">
+        <div style="font-size:10px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px">⚡ End of Phase 1 — What You Should Feel</div>
+        <div style="font-size:13px;color:#aaa;line-height:1.6">Easy runs feel genuinely easy at 6'30"–7'00"/km with HR below 145. Tempo at 5'30"–5'45"/km feels controlled, not desperate. 5k time trial under 29 minutes. Long run hits 7.5km without wiping you out. This aerobic base is what makes Phase 2 speed work actually land.</div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px;font-size:11px" onclick="getPhaseAI(1)">⚡ Check my progress with AI</button>
+        <div id="phase-ai-1" style="margin-top:10px;display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="plan-phase">
+    <div class="plan-phase-header" style="background:#1c1800" onclick="togglePhase(2)">
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--yellow);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:3px">Phase 2 · Weeks 5–8</div>
+        <div style="font-size:17px;font-weight:700">Find Your Speed</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Intervals · Tempo · Growing long run</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="pill pill-gray">Up next</span>
+        <span class="chevron" id="chev-2">▼</span>
+      </div>
+    </div>
+    <div class="plan-phase-body" id="phase-body-2">
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 5</div>
+        <div class="run-card run-intervals" onclick="logFromPlan('W5 Intervals 5×800m', 6, 'intervals','p13')">
+          <div class="run-card-type">🔁 Intervals</div>
+          <div class="run-card-title">5×800m</div>
+          <div class="run-card-detail">1km warm-up · 5×800m at 4'45"–5'00"/km · 90s jog rest between · 1km cooldown</div>
+        </div>
+        <div class="run-card run-tempo" onclick="logFromPlan('W5 Tempo Run', 4, 'tempo','p14')">
+          <div class="run-card-type">⚡ Tempo Run</div>
+          <div class="run-card-title">4km tempo</div>
+          <div class="run-card-detail">5'15"–5'30"/km · sustained · 7/10 effort throughout</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W5 Long Run', 8, 'long','p15')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">8km easy</div>
+          <div class="run-card-detail">6'00"–6'20"/km · new route recommended</div>
+        </div>
+      </div>
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 6 · More reps</div>
+        <div class="run-card run-intervals" onclick="logFromPlan('W6 Intervals 6×800m', 7, 'intervals','p16')">
+          <div class="run-card-type">🔁 Intervals</div>
+          <div class="run-card-title">6×800m</div>
+          <div class="run-card-detail">6×800m at 4'45"–5'00"/km · 90s jog rest · one more rep than last week</div>
+        </div>
+        <div class="run-card run-tempo" onclick="logFromPlan('W6 Tempo Run', 4, 'tempo','p17')">
+          <div class="run-card-type">⚡ Tempo Run</div>
+          <div class="run-card-title">4km tempo</div>
+          <div class="run-card-detail">5'15"–5'28"/km · slightly tighter than week 5</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W6 Long Run', 8.5, 'long','p18')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">8.5km easy</div>
+          <div class="run-card-detail">6'00"–6'20"/km</div>
+        </div>
+      </div>
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 7 · Step up to 1km reps</div>
+        <div class="run-card run-intervals" onclick="logFromPlan('W7 Intervals 4×1km', 6, 'intervals','p19')">
+          <div class="run-card-type">🔁 Intervals</div>
+          <div class="run-card-title">4×1km</div>
+          <div class="run-card-detail">4×1km at 4'50"–5'05"/km · 2min jog rest · longer reps, more focus on even splits</div>
+        </div>
+        <div class="run-card run-tempo" onclick="logFromPlan('W7 Tempo Run', 4.5, 'tempo','p20')">
+          <div class="run-card-type">⚡ Tempo Run</div>
+          <div class="run-card-title">4.5km tempo</div>
+          <div class="run-card-detail">5'10"–5'25"/km · getting closer to goal pace</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W7 Long Run', 9, 'long','p21')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">9km easy</div>
+          <div class="run-card-detail">6'00"–6'15"/km</div>
+        </div>
+      </div>
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 8 · Benchmark week</div>
+        <div class="run-card run-intervals" onclick="logFromPlan('W8 Intervals 5×1km', 7, 'intervals','p22')">
+          <div class="run-card-type">🔁 Intervals</div>
+          <div class="run-card-title">5×1km</div>
+          <div class="run-card-detail">5×1km at 4'50"–5'05"/km · aim for even splits across all reps</div>
+        </div>
+        <div class="run-card run-race" onclick="logFromPlan('W8 5k Time Trial', 5, 'race','p23')">
+          <div class="run-card-type">🎯 5k Time Trial</div>
+          <div class="run-card-title">5km max effort</div>
+          <div class="run-card-detail">Flat route · compare against Phase 1 time — you should be 60–90s faster</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W8 Long Run', 9.5, 'long','p24')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">9.5km easy</div>
+          <div class="run-card-detail">6'00"–6'15"/km · do this after the time trial</div>
+        </div>
+      </div>
+
+      <div class="plan-phase-outcome" style="background:#1c1800;border-color:#2e2500">
+        <div style="font-size:10px;font-weight:600;color:var(--yellow);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px">⚡ End of Phase 2 — What You Should Feel</div>
+        <div style="font-size:13px;color:#aaa;line-height:1.6">5k time trial under 27 minutes. Interval reps feel hard but controlled — if you're dying after rep 3, you went out too fast. Long run at 9.5km. Sub-5'10"/km starts to feel like a pace you can hold, not a sprint. The 10k is purely a distance question now.</div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px;font-size:11px;border-color:#2e2500" onclick="getPhaseAI(2)">⚡ Check my progress with AI</button>
+        <div id="phase-ai-2" style="margin-top:10px;display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div class="plan-phase" style="margin-bottom:24px">
+    <div class="plan-phase-header" style="background:#0d1a2e" onclick="togglePhase(3)">
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:3px">Phase 3 · Weeks 9–12</div>
+        <div style="font-size:17px;font-weight:700">Go the Distance</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Longer intervals · Race pace · 10k</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="pill pill-gray">Locked</span>
+        <span class="chevron" id="chev-3">▼</span>
+      </div>
+    </div>
+    <div class="plan-phase-body" id="phase-body-3">
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 9</div>
+        <div class="run-card run-intervals" onclick="logFromPlan('W9 Intervals 5×1km', 7, 'intervals','p25')">
+          <div class="run-card-type">🔁 Intervals</div>
+          <div class="run-card-title">5×1km</div>
+          <div class="run-card-detail">5×1km at 4'55"–5'10"/km · 2min rest · focus on even, controlled splits</div>
+        </div>
+        <div class="run-card run-tempo" onclick="logFromPlan('W9 Tempo Run', 5, 'tempo','p26')">
+          <div class="run-card-type">⚡ Tempo Run</div>
+          <div class="run-card-title">5km tempo</div>
+          <div class="run-card-detail">5'10"–5'25"/km · race-pace rehearsal · this is what 10k goal pace feels like</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W9 Long Run', 9, 'long','p27')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">9km easy</div>
+          <div class="run-card-detail">6'00"–6'15"/km · first taste of 10k territory coming next week</div>
+        </div>
+      </div>
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 10</div>
+        <div class="run-card run-intervals" onclick="logFromPlan('W10 Intervals 6×1km', 8, 'intervals','p28')">
+          <div class="run-card-type">🔁 Intervals</div>
+          <div class="run-card-title">6×1km</div>
+          <div class="run-card-detail">6×1km at 4'55"–5'10"/km · 90s rest · tighter recovery than before</div>
+        </div>
+        <div class="run-card run-tempo" onclick="logFromPlan('W10 Tempo Run', 5, 'tempo','p29')">
+          <div class="run-card-type">⚡ Tempo Run</div>
+          <div class="run-card-title">5km tempo</div>
+          <div class="run-card-detail">5'05"–5'20"/km · pushing closer to goal pace</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W10 Long Run', 9.5, 'long','p30')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">9.5km easy</div>
+          <div class="run-card-detail">6'00"–6'15"/km</div>
+        </div>
+      </div>
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 11 · Peak week</div>
+        <div class="run-card run-intervals" onclick="logFromPlan('W11 Intervals 3×2km', 8, 'intervals','p31')">
+          <div class="run-card-type">🔁 Intervals</div>
+          <div class="run-card-title">3×2km</div>
+          <div class="run-card-detail">3×2km at 5'00"–5'10"/km · 2min rest · longer reps build race endurance</div>
+        </div>
+        <div class="run-card run-tempo" onclick="logFromPlan('W11 Tempo Run', 5, 'tempo','p32')">
+          <div class="run-card-type">⚡ Tempo Run</div>
+          <div class="run-card-title">5km tempo</div>
+          <div class="run-card-detail">5'00"–5'15"/km · at goal 5k pace · this should feel hard but doable</div>
+        </div>
+        <div class="run-card run-long" onclick="logFromPlan('W11 Long Run', 10, 'long','p33')">
+          <div class="run-card-type">🏃 Long Run</div>
+          <div class="run-card-title">10km easy</div>
+          <div class="run-card-detail">6'00"–6'10"/km · your first 10k — log it</div>
+        </div>
+      </div>
+
+      <div class="plan-week">
+        <div class="plan-week-label">Week 12 · Race week</div>
+        <div class="run-card run-easy" onclick="logFromPlan('W12 Shakeout', 3, 'easy','p34')">
+          <div class="run-card-type">🏃 Shakeout</div>
+          <div class="run-card-title">3km very easy</div>
+          <div class="run-card-detail">6'30"+ /km · legs moving, nothing more · do this early in the week</div>
+        </div>
+        <div class="run-card run-race" onclick="logFromPlan('W12 5k Time Trial', 5, 'race','p35')">
+          <div class="run-card-type">🎯 5k Time Trial</div>
+          <div class="run-card-title">5km max effort</div>
+          <div class="run-card-detail">Goal: sub-25 minutes · flat route · trust your training</div>
+        </div>
+        <div class="run-card run-race" onclick="logFromPlan('W12 10k Time Trial', 10, 'race','p36')">
+          <div class="run-card-type">🎯 10k Time Trial</div>
+          <div class="run-card-title">10km max effort</div>
+          <div class="run-card-detail">Goal: sub-60 minutes · go out at 6'05"/km and negative split the second half</div>
+        </div>
+      </div>
+
+      <div class="plan-phase-outcome" style="background:#0d1a2e;border-color:#1e3a5f">
+        <div style="font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px">⚡ End of Phase 3 — What You Should Achieve</div>
+        <div style="font-size:13px;color:#aaa;line-height:1.6">5k under 25 minutes. 10k under 60 minutes. Tempo at 5'00"–5'15"/km feels controlled. Sub-5'00"/km for short efforts is within reach. You've covered 10km in training and know you can hold the pace — race day is just repeating what you've already done.</div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px;font-size:11px;border-color:#1e3a5f" onclick="getPhaseAI(3)">⚡ Check my progress with AI</button>
+        <div id="phase-ai-3" style="margin-top:10px;display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOG RUN ══ -->
+<div id="tab-log" class="page">
+  <div class="card">
+    <div class="card-title">Import from Screenshot</div>
+    <div class="upload-zone" id="upload-zone"
+      onclick="document.getElementById('file-input').click()"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)">
+      <div style="font-size:28px;margin-bottom:8px">📸</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Upload Strava or Samsung Health screenshot</div>
+      <div style="font-size:12px;color:var(--muted)">Claude reads your splits, pace and HR automatically</div>
+    </div>
+    <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
+    <div id="import-status" style="display:none;margin-top:12px"></div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;color:var(--muted);font-size:12px">
+    <hr style="flex:1;border:none;border-top:1px solid var(--border)"> or enter manually <hr style="flex:1;border:none;border-top:1px solid var(--border)">
+  </div>
+
+  <div class="card">
+    <div class="card-title">Run Details</div>
+    <div class="form-group">
+      <label class="form-label">Run Name</label>
+      <input class="form-input" id="f-name" type="text" placeholder="e.g. Lunch Run, Epsom Common…">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="f-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Run Type</label>
+        <select class="form-input" id="f-type">
+          <option value="easy">Easy Run</option>
+          <option value="tempo">Tempo Run</option>
+          <option value="intervals">Intervals</option>
+          <option value="long">Long Run</option>
+          <option value="race">Race / Time Trial</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label class="form-label">Distance (km)</label>
+        <input class="form-input" id="f-distance" type="number" step="0.01" placeholder="7.97">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Time (mm:ss)</label>
+        <input class="form-input" id="f-time" type="text" placeholder="54:11">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Elevation (m)</label>
+        <input class="form-input" id="f-elevation" type="number" placeholder="70">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Avg HR</label>
+        <input class="form-input" id="f-hr-avg" type="number" placeholder="146">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Max HR</label>
+        <input class="form-input" id="f-hr-max" type="number" placeholder="175">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Perceived Effort</label>
+      <select class="form-input" id="f-effort">
+        <option value="easy">😌 Easy</option>
+        <option value="moderate" selected>😤 Moderate</option>
+        <option value="hard">🔥 Hard</option>
+        <option value="max">💀 Maximum</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <input class="form-input" id="f-notes" type="text" placeholder="Legs tired, strong finish…">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Km Splits (optional)</div>
+    <div id="splits-wrap"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addSplit()" style="margin-top:8px">+ Add split</button>
+  </div>
+
+  <button class="btn btn-primary btn-full" onclick="saveRun()" style="margin-bottom:24px">💾 Save Run</button>
+</div>
+
+<!-- ══ HISTORY ══ -->
+<div id="tab-history" class="page">
+  <div id="hist-list">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:16px;font-weight:700">All Runs</div>
+      <span id="run-count" class="pill pill-gray">0 runs</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="filter-pills">
+      <button class="filter-pill active" onclick="setFilter(null,this)">All</button>
+      <button class="filter-pill" onclick="setFilter('easy',this)">Easy</button>
+      <button class="filter-pill" onclick="setFilter('tempo',this)">Tempo</button>
+      <button class="filter-pill" onclick="setFilter('intervals',this)">Intervals</button>
+      <button class="filter-pill" onclick="setFilter('long',this)">Long</button>
+      <button class="filter-pill" onclick="setFilter('race',this)">Race</button>
+    </div>
+    <div id="run-list"></div>
+    <div id="hist-empty" class="empty-state" style="display:none">
+      <div style="font-size:36px;opacity:0.4;margin-bottom:12px">📋</div>
+      <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px">No runs yet</div>
+      <div style="font-size:13px;margin-bottom:16px">Your logged runs will appear here.</div>
+      <button class="btn btn-primary" onclick="switchTab('log',document.querySelectorAll('.tab-btn')[2])">Log First Run</button>
+    </div>
+  </div>
+  <div id="hist-detail" style="display:none"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="ai-modal">
+  <div class="modal">
+    <button style="float:right;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer" onclick="closeModal()">✕</button>
+    <div style="font-size:18px;font-weight:700;margin-bottom:16px">AI Run Analysis</div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const WORKER = 'https://rumble-ai.vikashjasani.workers.dev';
+
+// ── DATA ──────────────────────────────────────
+function getRuns() { try { return JSON.parse(localStorage.getItem('rumble_runs')||'[]'); } catch { return []; } }
+function saveRuns(r) { localStorage.setItem('rumble_runs', JSON.stringify(r)); }
+function getBoxing() { try { return JSON.parse(localStorage.getItem('rumble_sessions')||'[]'); } catch { return []; } }
+
+// ── TABS ──────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id==='dashboard') renderDash();
+  if (id==='history') { _histFilter=null; document.querySelectorAll('.filter-pill').forEach((p,i)=>p.classList.toggle('active',i===0)); renderHistory(); }
+  if (id==='log') resetForm();
+}
+
+// ── PLAN ──────────────────────────────────────
+function togglePhase(n) {
+  const body = document.getElementById('phase-body-'+n);
+  const chev = document.getElementById('chev-'+n);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chev.classList.toggle('open', !isOpen);
+}
+
+async function getPhaseAI(phase) {
+  const runs = getRuns();
+  const el = document.getElementById('phase-ai-'+phase);
+  el.style.display = 'block';
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)"><div class="spinner"></div> Analysing your runs…</div>`;
+
+  const recentRuns = runs.slice(-10).map(r =>
+    `${r.date} · ${r.type} · ${r.distance}km · ${r.avgPace}/km · HR avg ${r.hrAvg||'?'} · effort: ${r.effort}`
+  ).join('\n');
+
+  const phaseGoals = {
+    1: 'Phase 1 goal: easy runs at 6\'30"–7\'00"/km, tempo at 5\'30"–5\'45"/km, long run to 7.5km, 5k time trial under 29 min',
+    2: 'Phase 2 goal: intervals 5×800m–5×1km at 4\'45"–5\'05"/km, tempo 4–4.5km at 5\'10"–5\'30"/km, long run to 9.5km, 5k under 27 min',
+    3: 'Phase 3 goal: intervals up to 3×2km, tempo 5km at 5\'00"–5\'15"/km, 10km long run, final 5k sub-25min and 10k sub-60min'
+  };
+
+  const prompt = `You are a running coach reviewing a runner's progress against their training plan.
+
+Recent runs:
+${recentRuns || 'No runs logged yet'}
+
+${phaseGoals[phase]}
+
+Goals: 5k in 25min (5'00"/km), 10k sub-60min (5'59"/km)
+
+Based on their logged runs, give a brief assessment (max 120 words):
+1. Are they on track for this phase's goals?
+2. What's the strongest signal from their data?
+3. One specific thing to focus on going into the next phase
+
+If no runs are logged, give encouraging advice about starting the plan.
+Be direct and coach-like.`;
+
+  try {
+    const res = await fetch(WORKER, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,messages:[{role:'user',content:prompt}]})});
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Unable to generate assessment.';
+    el.innerHTML = `<div style="font-size:12px;color:#aaa;line-height:1.6">${text.replace(/\n/g,'<br>')}</div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--red)">Could not connect. Check worker URL.</div>`;
+  }
+}
+
+// ── PLAN — log from card ──────────────────────
+let _pendingPlanRunId = null; // track which plan run is being logged
+
+function logFromPlan(name, distance, sessionType, planRunId) {
+  _pendingPlanRunId = planRunId;
+  resetForm();
+  document.getElementById('f-name').value = name;
+  document.getElementById('f-distance').value = distance;
+  document.getElementById('f-type').value = sessionType;
+  switchTab('log', document.querySelectorAll('.tab-btn')[2]);
+  window.scrollTo(0, 0);
+}
+
+// Plan run definitions in order — used for next-run logic on dashboard
+const PLAN_RUNS = [
+  // Phase 1
+  {id:"p1",w:1,name:'W1 Easy Run',dist:4,type:'easy',label:'Easy Run',detail:'4km · 6\'30"–7\'00"/km',css:'run-easy',accent:'var(--green)'},
+  {id:"p2",w:1,name:'W1 Tempo Run',dist:5,type:'tempo',label:'Tempo Run',detail:'5km total · 3km at 5\'30"–5\'45"/km',css:'run-tempo',accent:'var(--yellow)'},
+  {id:"p3",w:1,name:'W1 Long Run',dist:6,type:'long',label:'Long Run',detail:'6km · 6\'15"–6\'30"/km',css:'run-long',accent:'var(--blue)'},
+  {id:"p4",w:2,name:'W2 Easy Run',dist:4.5,type:'easy',label:'Easy Run',detail:'4.5km · 6\'30"–7\'00"/km',css:'run-easy',accent:'var(--green)'},
+  {id:"p5",w:2,name:'W2 Tempo Run',dist:5,type:'tempo',label:'Tempo Run',detail:'5km · 3km at 5\'28"–5\'43"/km',css:'run-tempo',accent:'var(--yellow)'},
+  {id:"p6",w:2,name:'W2 Long Run',dist:6.5,type:'long',label:'Long Run',detail:'6.5km · 6\'15"–6\'30"/km',css:'run-long',accent:'var(--blue)'},
+  {id:"p7",w:3,name:'W3 Easy Run',dist:5,type:'easy',label:'Easy Run',detail:'5km · 6\'30"–7\'00"/km',css:'run-easy',accent:'var(--green)'},
+  {id:"p8",w:3,name:'W3 Tempo Run',dist:5.5,type:'tempo',label:'Tempo Run',detail:'5.5km · 3.5km at 5\'30"–5\'45"/km',css:'run-tempo',accent:'var(--yellow)'},
+  {id:"p9",w:3,name:'W3 Long Run',dist:7,type:'long',label:'Long Run',detail:'7km · 6\'15"–6\'30"/km',css:'run-long',accent:'var(--blue)'},
+  {id:"p10",w:4,name:'W4 Easy Run',dist:4,type:'easy',label:'Easy Run',detail:'4km easy · fresh legs before time trial',css:'run-easy',accent:'var(--green)'},
+  {id:"p11",w:4,name:'W4 5k Time Trial',dist:5,type:'race',label:'5k Time Trial',detail:'5km max effort · Phase 1 benchmark',css:'run-race',accent:'var(--red)'},
+  {id:"p12",w:4,name:'W4 Long Run',dist:7.5,type:'long',label:'Long Run',detail:'7.5km · 6\'15"–6\'30"/km',css:'run-long',accent:'var(--blue)'},
+  // Phase 2
+  {id:"p13",w:5,name:'W5 Intervals 5×800m',dist:6,type:'intervals',label:'Intervals',detail:'5×800m at 4\'45"–5\'00"/km · 90s rest',css:'run-intervals',accent:'#a78bfa'},
+  {id:"p14",w:5,name:'W5 Tempo Run',dist:4,type:'tempo',label:'Tempo Run',detail:'4km at 5\'15"–5\'30"/km',css:'run-tempo',accent:'var(--yellow)'},
+  {id:"p15",w:5,name:'W5 Long Run',dist:8,type:'long',label:'Long Run',detail:'8km · 6\'00"–6\'20"/km',css:'run-long',accent:'var(--blue)'},
+  {id:"p16",w:6,name:'W6 Intervals 6×800m',dist:7,type:'intervals',label:'Intervals',detail:'6×800m at 4\'45"–5\'00"/km · 90s rest',css:'run-intervals',accent:'#a78bfa'},
+  {id:"p17",w:6,name:'W6 Tempo Run',dist:4,type:'tempo',label:'Tempo Run',detail:'4km at 5\'15"–5\'28"/km',css:'run-tempo',accent:'var(--yellow)'},
+  {id:"p18",w:6,name:'W6 Long Run',dist:8.5,type:'long',label:'Long Run',detail:'8.5km · 6\'00"–6\'20"/km',css:'run-long',accent:'var(--blue)'},
+  {id:"p19",w:7,name:'W7 Intervals 4×1km',dist:6,type:'intervals',label:'Intervals',detail:'4×1km at 4\'50"–5\'05"/km · 2min rest',css:'run-intervals',accent:'#a78bfa'},
+  {id:"p20",w:7,name:'W7 Tempo Run',dist:4.5,type:'tempo',label:'Tempo Run',detail:'4.5km at 5\'10"–5\'25"/km',css:'run-tempo',accent:'var(--yellow)'},
+  {id:"p21",w:7,name:'W7 Long Run',dist:9,type:'long',label:'Long Run',detail:'9km · 6\'00"–6\'15"/km',css:'run-long',accent:'var(--blue)'},
+  {id:"p22",w:8,name:'W8 Intervals 5×1km',dist:7,type:'intervals',label:'Intervals',detail:'5×1km at 4\'50"–5\'05"/km · even splits',css:'run-intervals',accent:'#a78bfa'},
+  {id:"p23",w:8,name:'W8 5k Time Trial',dist:5,type:'race',label:'5k Time Trial',detail:'5km max effort · Phase 2 benchmark',css:'run-race',accent:'var(--red)'},
+  {id:"p24",w:8,name:'W8 Long Run',dist:9.5,type:'long',label:'Long Run',detail:'9.5km · 6\'00"–6\'15"/km',css:'run-long',accent:'var(--blue)'},
+  // Phase 3
+  {id:"p25",w:9,name:'W9 Intervals 5×1km',dist:7,type:'intervals',label:'Intervals',detail:'5×1km at 4\'55"–5\'10"/km · 2min rest',css:'run-intervals',accent:'#a78bfa'},
+  {id:"p26",w:9,name:'W9 Tempo Run',dist:5,type:'tempo',label:'Tempo Run',detail:'5km at 5\'10"–5\'25"/km',css:'run-tempo',accent:'var(--yellow)'},
+  {id:"p27",w:9,name:'W9 Long Run',dist:9,type:'long',label:'Long Run',detail:'9km · 6\'00"–6\'15"/km',css:'run-long',accent:'var(--blue)'},
+  {id:"p28",w:10,name:'W10 Intervals 6×1km',dist:8,type:'intervals',label:'Intervals',detail:'6×1km at 4\'55"–5\'10"/km · 90s rest',css:'run-intervals',accent:'#a78bfa'},
+  {id:"p29",w:10,name:'W10 Tempo Run',dist:5,type:'tempo',label:'Tempo Run',detail:'5km at 5\'05"–5\'20"/km',css:'run-tempo',accent:'var(--yellow)'},
+  {id:"p30",w:10,name:'W10 Long Run',dist:9.5,type:'long',label:'Long Run',detail:'9.5km · 6\'00"–6\'15"/km',css:'run-long',accent:'var(--blue)'},
+  {id:"p31",w:11,name:'W11 Intervals 3×2km',dist:8,type:'intervals',label:'Intervals',detail:'3×2km at 5\'00"–5\'10"/km · 2min rest',css:'run-intervals',accent:'#a78bfa'},
+  {id:"p32",w:11,name:'W11 Tempo Run',dist:5,type:'tempo',label:'Tempo Run',detail:'5km at 5\'00"–5\'15"/km',css:'run-tempo',accent:'var(--yellow)'},
+  {id:"p33",w:11,name:'W11 Long Run',dist:10,type:'long',label:'Long Run',detail:'10km · 6\'00"–6\'10"/km · your first 10k',css:'run-long',accent:'var(--blue)'},
+  {id:"p34",w:12,name:'W12 Shakeout',dist:3,type:'easy',label:'Shakeout',detail:'3km very easy · legs moving only',css:'run-easy',accent:'var(--green)'},
+  {id:"p35",w:12,name:'W12 5k Time Trial',dist:5,type:'race',label:'5k Time Trial',detail:'5km max effort · goal sub-25min',css:'run-race',accent:'var(--red)'},
+  {id:"p36",w:12,name:'W12 10k Time Trial',dist:10,type:'race',label:'10k Time Trial',detail:'10km max effort · goal sub-60min',css:'run-race',accent:'var(--red)'},
+];
+
+function getNextRun() {
+  const runs = getRuns();
+  const loggedIds = new Set(runs.map(r => r.planRunId).filter(Boolean));
+  // Fall back to name matching for runs logged before this update
+  const loggedNames = new Set(runs.map(r => r.name));
+  const next = PLAN_RUNS.find(r => !loggedIds.has(r.id) && !loggedNames.has(r.name));
+  return next || null;
+}
+
+// Week progress: how many of this week's plan runs are logged
+function getWeekProgress(weekNum) {
+  const runs = getRuns();
+  const loggedIds = new Set(runs.map(r => r.planRunId).filter(Boolean));
+  const loggedNames = new Set(runs.map(r => r.name));
+  const weekRuns = PLAN_RUNS.filter(r => r.w === weekNum);
+  const done = weekRuns.filter(r => loggedIds.has(r.id) || loggedNames.has(r.name)).length;
+  return { done, total: weekRuns.length };
+}
+
+// ── DASHBOARD ─────────────────────────────────
+function renderDash() {
+  const runs = getRuns();
+  const now = new Date();
+
+  // Next run card
+  const next = getNextRun();
+  const nrc = document.getElementById('next-run-card');
+  if (next) {
+    const prog = getWeekProgress(next.w);
+    const dots = Array.from({length: prog.total}, (_,i) =>
+      `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${i < prog.done ? next.accent : 'var(--border2)'};margin-right:4px"></span>`
+    ).join('');
+    nrc.innerHTML = `
+      <div class="run-card ${next.css}" onclick="logFromPlan('${next.name}',${next.dist},'${next.type}','${next.id}')" style="margin-bottom:12px;border-radius:12px;padding:16px 18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:${next.accent}">Up next · Week ${next.w}</div>
+          <div style="display:flex;align-items:center;gap:6px">${dots}<span style="font-size:10px;color:var(--muted)">${prog.done}/${prog.total}</span></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:18px;font-weight:700;margin-bottom:3px">${next.label}</div>
+            <div style="font-size:13px;color:var(--muted)">${next.detail}</div>
+          </div>
+          <div style="font-size:20px;opacity:0.5;flex-shrink:0;padding-left:12px">→</div>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:${next.accent};font-weight:600">Tap to log this run</div>
+      </div>`;
+  } else {
+    nrc.innerHTML = `<div class="card" style="margin-bottom:12px;text-align:center;padding:20px"><div style="font-size:24px;margin-bottom:6px">🏆</div><div style="font-size:15px;font-weight:700">Plan complete!</div><div style="font-size:12px;color:var(--muted);margin-top:4px">All 36 runs done. Incredible.</div></div>`;
+  }
+
+  // Monday of this week
+  const dow = now.getDay();
+  const mon = new Date(now); mon.setDate(now.getDate() - ((dow+6)%7));
+
+  // Weekly stats
+  let wRuns=0, wKm=0, wPaces=[];
+  runs.forEach(r => {
+    const rd=new Date(r.date+'T12:00:00');
+    if (rd>=mon && rd<=now) { wRuns++; wKm+=r.distance||0; if(r.avgPace) wPaces.push(ps(r.avgPace)); }
+  });
+  document.getElementById('wk-runs').textContent = wRuns;
+  document.getElementById('wk-km').textContent = wKm.toFixed(1);
+  document.getElementById('wk-pace').textContent = wPaces.length ? sp(wPaces.reduce((a,b)=>a+b)/wPaces.length) : '—';
+
+  // Pace bars
+  if (runs.length) {
+    const lp = ps(runs[runs.length-1].avgPace);
+    const s0=372, g5=300, g10=359;
+    const p5=Math.min(100,Math.max(0,((s0-lp)/(s0-g5))*100));
+    const p10=Math.min(100,Math.max(0,((s0-lp)/(s0-g10))*100));
+    setTimeout(()=>{ document.getElementById('bar-5k').style.width=p5+'%'; document.getElementById('bar-10k').style.width=p10+'%'; },150);
+    const d5=lp-g5, d10=lp-g10;
+    document.getElementById('gap-5k').textContent = d5>0 ? sp(d5)+' to go' : '✓ Goal reached!';
+    document.getElementById('gap-10k').textContent = d10>0 ? sp(d10)+' to go' : '✓ Goal reached!';
+  }
+}
+
+// ── HISTORY ───────────────────────────────────
+let _histFilter = null;
+
+function setFilter(type, btn) {
+  _histFilter = type;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderHistory();
+}
+
+function renderHistory() {
+  const allRuns=getRuns();
+  const runs = _histFilter ? allRuns.filter(r => r.type === _histFilter) : allRuns;
+  document.getElementById('run-count').textContent=allRuns.length+' run'+(allRuns.length!==1?'s':'');
+  document.getElementById('hist-list').style.display='block';
+  document.getElementById('hist-detail').style.display='none';
+  const list=document.getElementById('run-list');
+  if (!allRuns.length) { list.innerHTML=''; document.getElementById('hist-empty').style.display='block'; return; }
+  document.getElementById('hist-empty').style.display='none';
+  if (!runs.length) {
+    list.innerHTML=`<div class="empty-state" style="padding:32px 20px"><div style="font-size:13px">No ${_histFilter} runs logged yet.</div></div>`;
+    return;
+  }
+  list.innerHTML='';
+  // Build index map into full allRuns array for showDetail to work correctly
+  [...runs].reverse().forEach(r => {
+    const realIdx = allRuns.indexOf(r);
+    list.innerHTML += runCard(r, realIdx);
+  });
+}
+
+function runCard(r, idx) {
+  const tc={easy:'pill-blue',tempo:'pill-yellow',intervals:'pill-orange',long:'pill-green',race:'pill-red'};
+  const tl={easy:'Easy',tempo:'Tempo',intervals:'Intervals',long:'Long Run',race:'Race'};
+  return `<div class="run-item" onclick="showDetail(${idx})">
+    <div style="flex:1">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:2px">${fd(r.date)}</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:5px">${r.name||'Run'}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        ${r.distance?`<span class="run-stat"><strong>${r.distance}km</strong></span>`:''}
+        ${r.time?`<span class="run-stat"><strong>${r.time}</strong></span>`:''}
+        ${r.avgPace?`<span class="run-stat">${r.avgPace}/km</span>`:''}
+        ${r.hrAvg?`<span class="run-stat">♥ ${r.hrAvg}</span>`:''}
+      </div>
+    </div>
+    <div style="text-align:right;flex-shrink:0;padding-left:10px">
+      <span class="pill ${tc[r.type]||'pill-gray'}">${tl[r.type]||r.type}</span>
+      ${r.rating?`<div style="margin-top:5px;font-size:13px">${'⭐'.repeat(r.rating)}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function showDetail(idx) {
+  const runs=getRuns(), r=runs[idx];
+  if (!r) return;
+  document.getElementById('hist-list').style.display='none';
+  const view=document.getElementById('hist-detail');
+  view.style.display='block';
+
+  const maxHR=r.hrMax||185;
+  const zones=[
+    {n:'Z1 Easy',      min:maxHR*.50,max:maxHR*.60,c:'#60a5fa'},
+    {n:'Z2 Aerobic',   min:maxHR*.60,max:maxHR*.70,c:'#4ade80'},
+    {n:'Z3 Tempo',     min:maxHR*.70,max:maxHR*.80,c:'#facc15'},
+    {n:'Z4 Threshold', min:maxHR*.80,max:maxHR*.90,c:'#f97316'},
+    {n:'Z5 Max',       min:maxHR*.90,max:maxHR,    c:'#f87171'},
+  ];
+  const avgHR=r.hrAvg||146;
+  const zt=zones.map(z=>{
+    if (r.splits&&r.splits.length) return r.splits.filter(s=>s.hr&&s.hr>=z.min&&s.hr<=z.max).length;
+    return (avgHR>=z.min&&avgHR<=z.max)?100:8;
+  });
+  const tZ=zt.reduce((a,b)=>a+b)||1;
+
+  const sp2=r.splits||[];
+  const maxS=sp2.length?Math.max(...sp2.map(s=>ps(s.pace)||480),480):480;
+  const splHtml=sp2.length?`<table class="splits-table">
+    <thead><tr><th>km</th><th style="padding-left:8px">Pace</th><th style="text-align:right">HR</th></tr></thead>
+    <tbody>${sp2.map((s,i)=>{
+      const sec=ps(s.pace)||360;
+      const pct=Math.min(93,(sec/(maxS+30))*100);
+      const col=sec<330?'#f97316':sec<360?'#facc15':sec<390?'#4ade80':'#60a5fa';
+      return `<tr>
+        <td class="split-km">${s.km||i+1}</td>
+        <td class="split-bar-cell"><div class="split-bar-wrap"><div class="split-bar" style="width:${pct}%;background:${col}"><span>${s.pace}</span></div></div></td>
+        <td class="split-hr">${s.hr?'♥ '+s.hr:''}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`:'<div style="font-size:13px;color:var(--muted)">No split data recorded</div>';
+
+  view.innerHTML=`
+    <button class="detail-back" onclick="renderHistory()">← All runs</button>
+    <div class="detail-header">
+      <div style="font-size:20px;font-weight:700;margin-bottom:3px">${r.name||'Run'}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">${fd(r.date)}${r.elevation?` · ↑${r.elevation}m`:''}</div>
+      <div class="detail-stats">
+        <div class="stat-box"><div class="stat-label">Distance</div><div class="stat-value">${r.distance||'—'}km</div></div>
+        <div class="stat-box"><div class="stat-label">Time</div><div class="stat-value" style="font-size:14px">${r.time||'—'}</div></div>
+        <div class="stat-box"><div class="stat-label">Avg Pace</div><div class="stat-value" style="font-size:13px">${r.avgPace||'—'}/km</div></div>
+        <div class="stat-box"><div class="stat-label">Avg HR</div><div class="stat-value" style="color:var(--red)">${r.hrAvg||'—'}</div></div>
+        <div class="stat-box"><div class="stat-label">Max HR</div><div class="stat-value" style="color:var(--red);font-size:14px">${r.hrMax||'—'}</div></div>
+        <div class="stat-box"><div class="stat-label">Effort</div><div class="stat-value" style="font-size:16px">${ee(r.effort)}</div></div>
+      </div>
+    </div>
+
+    ${r.aiFeedback
+      ?`<div class="ai-box" style="margin-bottom:12px"><div class="ai-label">⚡ AI Analysis${r.rating?' · '+'⭐'.repeat(r.rating):''}</div><div class="ai-text">${r.aiFeedback.replace(/\n/g,'<br>')}</div></div>`
+      :`<button class="btn btn-secondary btn-full" style="margin-bottom:12px" onclick="getAI(${idx})">⚡ Analyse vs Training Plan</button>`}
+
+    <div class="card"><div class="card-title">Km Splits</div>${splHtml}</div>
+
+    <div class="card">
+      <div class="card-title">Heart Rate Zones</div>
+      ${zones.map((z,i)=>{
+        const pct=Math.round((zt[i]/tZ)*100);
+        return `<div class="hr-zone-row">
+          <div class="hr-zone-label" style="color:${z.c}">${z.n}</div>
+          <div class="hr-zone-bar-wrap"><div class="hr-zone-bar" style="width:0%;background:${z.c}" data-p="${pct}"></div></div>
+          <div class="hr-zone-val">${pct}%</div>
+        </div>`;
+      }).join('')}
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">Est. max HR: ${maxHR} bpm</div>
+    </div>
+
+    ${r.notes?`<div class="card"><div class="card-title">Notes</div><div style="font-size:13px;color:var(--muted)">${r.notes}</div></div>`:''}
+    <div style="margin-bottom:24px">
+      <button class="btn btn-ghost btn-sm" onclick="delRun(${idx})" style="color:var(--red)">🗑 Delete run</button>
+    </div>`;
+
+  setTimeout(()=>{ view.querySelectorAll('.hr-zone-bar').forEach(b=>{ b.style.width=b.dataset.p+'%'; }); },100);
+}
+
+// ── AI ────────────────────────────────────────
+async function getAI(idx) {
+  const runs=getRuns(), r=runs[idx];
+  document.getElementById('modal-body').innerHTML=`<div style="text-align:center;padding:30px"><div class="spinner"></div><div style="margin-top:12px;font-size:13px;color:var(--muted)">Analysing your run vs plan…</div></div>`;
+  document.getElementById('ai-modal').classList.add('open');
+
+  const prompt=`You are a running coach. Analyse this training run.
+
+Run: ${r.name} | ${r.date} | Type: ${r.type}
+${r.distance}km in ${r.time} · Avg pace ${r.avgPace}/km
+HR: avg ${r.hrAvg}bpm, max ${r.hrMax}bpm | Effort: ${r.effort}
+Splits: ${r.splits?.map(s=>`km${s.km}:${s.pace}(HR${s.hr})`).join(', ')||'not recorded'}
+Notes: ${r.notes||'none'}
+
+Phase 1 plan targets:
+- Easy run: 6'30"–7'00"/km, conversational HR (Z1–Z2)
+- Tempo: 5'30"–5'45"/km, 7/10 effort (Z3–Z4)
+- Long run: 6'15"–6'30"/km, Z2 throughout
+Goals: 5k in 25min (5'00"/km), 10k sub-60min
+
+Provide:
+1. Rating: X/5
+2. Plan vs actual: did pace/effort match the target?
+3. Splits insight: one specific observation
+4. HR observation: appropriate for session type?
+5. One concrete tip for next session
+
+Max 160 words. Direct, coach-like.`;
+
+  try {
+    const res=await fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const text=data.content?.[0]?.text||'Unable to generate feedback.';
+    const rm=text.match(/rating:\s*(\d)/i);
+    runs[idx].aiFeedback=text; runs[idx].rating=rm?parseInt(rm[1]):null; saveRuns(runs);
+    document.getElementById('modal-body').innerHTML=`
+      <div class="ai-text" style="margin-bottom:16px">${text.replace(/\n/g,'<br>')}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="closeModal();showDetail(${idx})">View Detail</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+      </div>`;
+  } catch(e) {
+    document.getElementById('modal-body').innerHTML=`<div style="color:var(--red);font-size:13px">Could not connect. Check worker URL.</div><button class="btn btn-ghost" style="margin-top:12px" onclick="closeModal()">Close</button>`;
+  }
+}
+function closeModal() { document.getElementById('ai-modal').classList.remove('open'); }
+
+// ── SCREENSHOT ────────────────────────────────
+function handleDrop(e) { e.preventDefault(); document.getElementById('upload-zone').classList.remove('drag'); if(e.dataTransfer.files[0]) processImg(e.dataTransfer.files[0]); }
+function handleFileSelect(e) { if(e.target.files[0]) processImg(e.target.files[0]); }
+
+async function processImg(file) {
+  const st=document.getElementById('import-status');
+  st.style.display='block';
+  st.innerHTML=`<div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px"><div class="spinner"></div> Reading screenshot…</div>`;
+  try {
+    const b64=await f2b64(file);
+    const res=await fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[
+      {type:'image',source:{type:'base64',media_type:file.type,data:b64}},
+      {type:'text',text:`Extract all running data from this screenshot. Return ONLY valid JSON:
+{"name":"","date":"YYYY-MM-DD","distance":0.0,"time":"MM:SS","avgPace":"M:SS","hrAvg":0,"hrMax":0,"elevation":0,"splits":[{"km":1,"pace":"M:SS","hr":0}]}`}
+    ]}]})});
+    const data=await res.json();
+    const parsed=JSON.parse((data.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim());
+    if(parsed.name) document.getElementById('f-name').value=parsed.name;
+    if(parsed.date) document.getElementById('f-date').value=parsed.date;
+    if(parsed.distance) document.getElementById('f-distance').value=parsed.distance;
+    if(parsed.time) document.getElementById('f-time').value=parsed.time;
+    if(parsed.hrAvg) document.getElementById('f-hr-avg').value=parsed.hrAvg;
+    if(parsed.hrMax) document.getElementById('f-hr-max').value=parsed.hrMax;
+    if(parsed.elevation) document.getElementById('f-elevation').value=parsed.elevation;
+    document.getElementById('splits-wrap').innerHTML=''; splitN=0;
+    (parsed.splits||[]).forEach(s=>addSplit(s.km,s.pace,s.hr));
+    st.innerHTML=`<div style="color:var(--green);font-size:13px">✓ Data extracted — review and save below</div>`;
+  } catch(e) {
+    st.innerHTML=`<div style="color:var(--red);font-size:13px">⚠ Couldn't extract data. Try a clearer screenshot or enter manually.</div>`;
+  }
+}
+function f2b64(f){return new Promise((r,j)=>{const x=new FileReader();x.onload=()=>r(x.result.split(',')[1]);x.onerror=j;x.readAsDataURL(f);});}
+
+// ── SPLITS ────────────────────────────────────
+let splitN=0;
+function addSplit(km='',pace='',hr='') {
+  splitN++;
+  const w=document.getElementById('splits-wrap');
+  const d=document.createElement('div'); d.className='form-row-3'; d.style.marginBottom='8px';
+  d.innerHTML=`<input class="form-input" placeholder="km ${splitN}" value="${km||''}" style="font-size:13px"><input class="form-input" placeholder="6:10" value="${pace||''}" style="font-size:13px"><input class="form-input" placeholder="HR" value="${hr||''}" style="font-size:13px">`;
+  w.appendChild(d);
+}
+
+// ── SAVE ──────────────────────────────────────
+function saveRun() {
+  const dist=parseFloat(document.getElementById('f-distance').value);
+  const time=document.getElementById('f-time').value;
+  if(!dist||!time){alert('Please enter distance and time.');return;}
+  const avgPace=sp(ts(time)/dist);
+  const rows=document.getElementById('splits-wrap').querySelectorAll('.form-row-3');
+  const splits=[]; rows.forEach((row,i)=>{const ins=row.querySelectorAll('input');if(ins[1].value)splits.push({km:ins[0].value||i+1,pace:ins[1].value,hr:ins[2].value?parseInt(ins[2].value):null});});
+  const run={id:Date.now(),planRunId:_pendingPlanRunId||null,name:document.getElementById('f-name').value||'Run',date:document.getElementById('f-date').value||ds(new Date()),type:document.getElementById('f-type').value,distance:dist,time,avgPace,hrAvg:parseInt(document.getElementById('f-hr-avg').value)||null,hrMax:parseInt(document.getElementById('f-hr-max').value)||null,elevation:parseInt(document.getElementById('f-elevation').value)||null,effort:document.getElementById('f-effort').value,notes:document.getElementById('f-notes').value,splits};
+
+  // Check week completion before saving
+  let weekCompleteMsg = null;
+  if (_pendingPlanRunId) {
+    const planRun = PLAN_RUNS.find(r => r.id === _pendingPlanRunId);
+    if (planRun) {
+      const runs = getRuns();
+      const loggedIds = new Set(runs.map(r => r.planRunId).filter(Boolean));
+      loggedIds.add(_pendingPlanRunId); // include this one
+      const weekRuns = PLAN_RUNS.filter(r => r.w === planRun.w);
+      const doneAfter = weekRuns.filter(r => loggedIds.has(r.id)).length;
+      if (doneAfter === weekRuns.length) {
+        const nextWeek = planRun.w + 1;
+        weekCompleteMsg = nextWeek <= 12
+          ? `✓ Week ${planRun.w} complete! Week ${nextWeek} unlocked.`
+          : `🏆 All 12 weeks done!`;
+      }
+    }
+  }
+
+  _pendingPlanRunId = null;
+  const runs=getRuns(); runs.push(run); saveRuns(runs);
+  resetForm();
+
+  if (weekCompleteMsg) {
+    showWeekBanner(weekCompleteMsg);
+  }
+  switchTab('history',document.querySelectorAll('.tab-btn')[3]);
+  setTimeout(()=>showDetail(runs.length-1),80);
+}
+
+function showWeekBanner(msg) {
+  let b = document.getElementById('week-banner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'week-banner';
+    b.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#0d2016;border:1px solid var(--green);color:var(--green);font-size:13px;font-weight:600;padding:10px 20px;border-radius:24px;z-index:300;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap';
+    document.body.appendChild(b);
+  }
+  b.textContent = msg;
+  b.style.opacity = '1';
+  setTimeout(() => b.style.opacity = '0', 3500);
+}
+function delRun(idx){if(!confirm('Delete this run?'))return;const r=getRuns();r.splice(idx,1);saveRuns(r);renderHistory();}
+function resetForm(){['f-name','f-distance','f-time','f-hr-avg','f-hr-max','f-elevation','f-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('f-date').value=ds(new Date());document.getElementById('splits-wrap').innerHTML='';document.getElementById('import-status').style.display='none';splitN=0;}
+
+// ── UTILS ─────────────────────────────────────
+function ps(p){if(!p)return 0;const c=p.replace(/['"]/g,'').trim().split(':');return c.length===2?parseInt(c[0])*60+parseInt(c[1]):0;}
+function sp(s){const m=Math.floor(s/60),ss=Math.round(s%60);return `${m}'${String(ss).padStart(2,'0')}"`;} 
+function ts(t){const p=t.split(':');return p.length===2?parseInt(p[0])*60+parseInt(p[1]):p.length===3?parseInt(p[0])*3600+parseInt(p[1])*60+parseInt(p[2]):0;}
+function ds(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function fd(s){if(!s)return '';const d=new Date(s+'T12:00:00');return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+function ee(e){return {easy:'😌',moderate:'😤',hard:'🔥',max:'💀'}[e]||'—';}
+
+// ── INIT ──────────────────────────────────────
+document.getElementById('f-date').value=ds(new Date());
+renderDash();
+</script>
+</body>
+</html>
